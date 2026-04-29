@@ -1,0 +1,52 @@
+{
+  "name": "hmfw-vue3",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@mario9/tiptap-editor": "^0.1.0",
+    "@tiptap/core": "3.22.5",
+    "@tiptap/pm": "3.22.5",
+    "@tiptap/vue-3": "^3.22.5",
+    "axios": "^1.15.2",
+    "dayjs": "^1.11.20",
+    "echarts": "^6.0.0",
+    "element-plus": "^2.13.7",
+    "katex": "^0.16.45",
+    "lodash": "^4.18.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.33",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^24.12.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vitejs/plugin-vue-jsx": "^5.1.5",
+    "@vue/tsconfig": "^0.8.1",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-vue": "^10.9.0",
+    "prettier": "^3.8.3",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "sass-embedded": "^1.99.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~5.9.3",
+    "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^31.1.0",
+    "vite": "^7.3.2",
+    "vite-svg-loader": "^5.1.1",
+    "vue-tsc": "^3.2.7"
+  }
+}

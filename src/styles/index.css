@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+@theme {
+  --spacing: 1px;
+}
+
+@font-face {
+  font-family: 'SourceHanSans';
+  src: url('./SourceHanSansCN-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SourceHanSans';
+  src: url('./SourceHanSansCN-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --el-font-family: 'PingFang SC', 'SourceHanSans', 'Microsoft YaHei', sans-serif;
+  font-family: 'PingFang SC', 'SourceHanSans', 'Microsoft YaHei', sans-serif;
+}
+/* @font-face {
+  font-family: 'SourceHanSans';
+  src: url('./SourceHanSansCN-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+} */
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.flex-between {
+  @apply flex items-center justify-between;
+}
