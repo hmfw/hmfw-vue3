@@ -8,7 +8,6 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-import SvgLoader from 'vite-svg-loader'
 // import ElementPlus from 'unplugin-element-plus/vite'
 
 // https://vite.dev/config/
@@ -28,25 +27,6 @@ export default defineConfig(({ command }) => ({
           // version: "2.1.5",
         }),
       ],
-    }),
-
-    SvgLoader({
-      defaultImport: 'component',
-      svgo: true,
-      svgoConfig: {
-        multipass: true,
-        plugins: [
-          {
-            name: 'preset-default',
-            params: {
-              overrides: {
-                // 禁用 removeViewBox 插件，保留 viewBox 属性
-                removeViewBox: false,
-              },
-            },
-          },
-        ],
-      },
     }),
 
     // Components({
