@@ -252,6 +252,9 @@ watch(
       margin: 4px 8px;
       border-radius: 6px;
     }
+    > .el-menu-item {
+      padding-left: 12px !important;
+    }
 
     .el-menu-item.is-active {
       background-color: var(--el-color-primary);

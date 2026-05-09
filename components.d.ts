@@ -13,6 +13,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     EchartBar: typeof import('./src/components/EchartBar.vue')['default']
+    EchartLine: typeof import('./src/components/EchartLine.vue')['default']
+    EchartPie: typeof import('./src/components/EchartPie.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
@@ -47,6 +49,8 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const EchartBar: typeof import('./src/components/EchartBar.vue')['default']
+  const EchartLine: typeof import('./src/components/EchartLine.vue')['default']
+  const EchartPie: typeof import('./src/components/EchartPie.vue')['default']
   const ElAside: typeof import('element-plus/es')['ElAside']
   const ElAvatar: typeof import('element-plus/es')['ElAvatar']
   const ElBadge: typeof import('element-plus/es')['ElBadge']

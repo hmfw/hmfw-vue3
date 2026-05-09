@@ -1,5 +1,5 @@
 <template>
-  <div class="echarts-bar relative">
+  <div class="echarts-line relative">
     <div ref="chartRef" :style="style"></div>
   </div>
 </template>
@@ -10,7 +10,7 @@ import { merge, debounce } from 'lodash'
 import request, { type EchartsResult } from '@/utils/request'
 
 import * as echarts from 'echarts/core'
-import { BarChart, PictorialBarChart } from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 
 import {
   TitleComponent,
@@ -23,7 +23,7 @@ import {
 import { CanvasRenderer } from 'echarts/renderers'
 import { LegacyGridContainLabel } from 'echarts/features'
 
-import type { BarSeriesOption, PictorialBarSeriesOption } from 'echarts/charts'
+import type { LineSeriesOption } from 'echarts/charts'
 import type {
   TitleComponentOption,
   TooltipComponentOption,
@@ -35,11 +35,9 @@ import type {
 
 import { useEcharts, useEmptyEchart } from '@/hooks/useEcharts'
 import { useResizeObserver } from '@/hooks/useResizeObserver'
-import type { CallbackDataParams } from 'echarts/types/dist/shared'
 
 echarts.use([
-  BarChart,
-  PictorialBarChart,
+  LineChart,
   TitleComponent,
   TooltipComponent,
   GridComponent,
@@ -50,20 +48,17 @@ echarts.use([
   CanvasRenderer,
 ])
 
-type BarSeries = BarSeriesOption | PictorialBarSeriesOption
-
-export type BarOption = echarts.ComposeOption<
+export type LineOption = echarts.ComposeOption<
   | TitleComponentOption
   | TooltipComponentOption
   | GridComponentOption
   | LegendComponentOption
   | DatasetComponentOption
   | MarkLineComponentOption
-  | BarSeriesOption
-  | PictorialBarSeriesOption
+  | LineSeriesOption
 >
 
-export interface BarProps {
+export interface LineProps {
   height?: number // 图表高度
   url?: string // 数据请求地址
   payload?: Record<string, any> // 请求参数
@@ -71,26 +66,26 @@ export interface BarProps {
   average?: number | string // 平均线数值
   averageLabel?: string // 平均线标签
   interval?: number // 类目轴标签间隔
-  barWidth?: number // 柱子宽度
-  borderRadius?: number[] // 柱子圆角
-  showBackground?: boolean // 是否显示柱子背景
-  backgroundStyleColor?: string // 柱子背景色
-  cyclePickColor?: boolean // 是否按数据索引循环取色
-  color?: string[] | string[][] // 柱子颜色，支持单色数组或渐变色二维数组（从上到下）
+  smooth?: boolean // 是否平滑曲线
+  area?: boolean // 是否显示面积填充
+  areaOpacity?: number // 面积填充透明度
+  symbol?: boolean // 是否显示数据点
+  lineWidth?: number // 线条宽度
+  // 颜色数组，支持单色字符串数组或渐变色二维数组（从上到下）；渐变仅作用于面积填充，线条始终取首色
+  color?: string[] | string[][]
   mockData?: EchartsResult // Mock 数据，优先于 url 请求
-  graph?: boolean // 是否为条形图（横向）
-  legend?: boolean // 是否显示图例
-  stack?: boolean // 是否堆叠柱状图
-  option?: BarOption // 额外的 ECharts 配置，会与默认配置深度合并
+  legend?: boolean // 是否显示图例（位于右上角）
+  stack?: boolean // 是否堆叠
+  option?: LineOption // 额外的 ECharts 配置，会与默认配置深度合并
   responseHook?: (data: EchartsResult) => EchartsResult // 接口响应数据处理函数
 }
 
-const props = withDefaults(defineProps<BarProps>(), {
+const props = withDefaults(defineProps<LineProps>(), {
   height: 300,
-  barWidth: 24,
   averageLabel: '均值',
-  showBackground: false,
-  borderRadius: () => [4, 4, 0, 0],
+  areaOpacity: 0.3,
+  symbol: true,
+  lineWidth: 2,
   color: () => ['#2979EB', '#FBAE3E', '#F86D6D', '#4ACE82', '#B37FEB', '#44C7FD', '#FADB14'],
 })
 
@@ -117,7 +112,6 @@ const showAverage = ref(false)
 
 const resultToDataset = (data: EchartsResult): DatasetComponentOption => {
   const dimensions = ['category', ...data.series.map(s => s.name)]
-
   const source = data.xData.map((name, idx) => {
     const row: Array<string | number | undefined> = [name]
     data.series.forEach(s => {
@@ -129,48 +123,35 @@ const resultToDataset = (data: EchartsResult): DatasetComponentOption => {
   return { dimensions, source }
 }
 
-const getItemColor = (params: CallbackDataParams) => {
-  const { dataIndex, seriesIndex } = params
-  const index = props.cyclePickColor
-    ? dataIndex % props.color.length
-    : (seriesIndex ?? 0) % props.color.length
-  return createColor(props.color[index] ?? '#2979EB')
-}
-
-const generateSeries = (data: EchartsResult): BarSeries[] => {
+const generateSeries = (data: EchartsResult): LineSeriesOption[] => {
   const averageValue = props.average || data.averageLineValue
   showAverage.value = !!averageValue
-  const series: BarSeries[] = []
   const averageLabel = `${props.averageLabel} ${averageValue} ${props.unit || ''}`
   const markLine = averageValue ? createMarkLine(averageLabel, Number(averageValue)) : undefined
-  // 横向条形图时，平均线需要从纵轴切换到横轴
-  if (markLine && props.graph && markLine.data?.[0]) {
-    const markLineData = markLine.data[0] as any
-    markLineData.yAxis = undefined
-    markLineData.xAxis = Number(averageValue)
-  }
 
-  data.series.forEach(s => {
-    const item: BarSeries = {
-      type: 'bar',
+  return data.series.map((s, i) => {
+    const rawColor = props.color[i % props.color.length] ?? '#2979EB'
+    // 线条始终用纯色（取渐变数组的第一个色值），面积填充才使用渐变
+    const solidColor = Array.isArray(rawColor) ? rawColor[0] : rawColor
+    return {
+      type: 'line',
       name: s.name,
-      barWidth: props.barWidth,
+      smooth: props.smooth,
+      symbol: props.symbol ? 'circle' : 'none',
+      symbolSize: 6,
+      lineStyle: { width: props.lineWidth, color: solidColor },
+      itemStyle: { color: solidColor },
+      areaStyle: props.area
+        ? { opacity: props.areaOpacity, color: createColor(rawColor) as any }
+        : undefined,
       stack: props.stack ? 'total' : undefined,
-      itemStyle: {
-        borderRadius: props.borderRadius,
-        color: getItemColor,
-      },
-      showBackground: props.showBackground,
-      backgroundStyle: { color: props.backgroundStyleColor || '#F5F7FA' },
       markLine: markLine,
     }
-    series.push(item)
   })
-  return series
 }
 
-const mergeOption = (dataset: DatasetComponentOption, series: BarSeries[]): BarOption => {
-  const defaultOption: BarOption = {
+const mergeOption = (dataset: DatasetComponentOption, series: LineSeriesOption[]): LineOption => {
+  const defaultOption: LineOption = {
     color: props.color,
     grid: {
       top: (props.unit && props.unit !== '%') || props.legend ? 40 : showAverage.value ? 35 : 18,
@@ -191,9 +172,10 @@ const mergeOption = (dataset: DatasetComponentOption, series: BarSeries[]): BarO
     },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      axisPointer: { type: 'line' },
       valueFormatter: value => `${value}${props.unit ? props.unit : ''}`,
     },
+    legend: props.legend ? { right: 0, top: 0 } : undefined,
     xAxis: {
       type: 'category',
       axisTick: { show: false },
@@ -202,8 +184,6 @@ const mergeOption = (dataset: DatasetComponentOption, series: BarSeries[]): BarO
         lineHeight: 18,
         color: '#929292',
         interval: props.interval,
-        // interval=0 时垂直显示文字，用于密集标签场景
-        formatter: (value: string) => (props.interval === 0 ? value.split('').join('\n') : value),
       },
       axisLine: {
         lineStyle: { color: '#e6e7eb' },
@@ -228,14 +208,6 @@ const mergeOption = (dataset: DatasetComponentOption, series: BarSeries[]): BarO
     },
     dataset: dataset,
     series: series,
-  }
-
-  if (props.graph) {
-    const yAxis = defaultOption.yAxis as any
-    const xAxis = defaultOption.xAxis as any
-    yAxis.type = 'category'
-    yAxis.inverse = true
-    xAxis.type = 'value'
   }
 
   return merge(defaultOption, props.option || {})
@@ -275,7 +247,7 @@ const doFetchData = async () => {
     const params: Record<string, any> = { ...(props.payload || {}) }
     try {
       data = await request.post<EchartsResult>(props.url, params)
-    } catch (err: any) {
+    } catch {
       // 请求被取消或失败时静默返回（request.ts 拦截器已处理错误提示）
       return
     }
@@ -286,8 +258,8 @@ const doFetchData = async () => {
     emit('response', data)
   }
 
-  // 忽略已过期的响应（用户快速切换参数时，只渲染最新请求的结果）
   if (mySerial !== requestSerial) {
+    // 忽略已过期的响应（用户快速切换参数时，只渲染最新请求的结果）
     return
   }
 

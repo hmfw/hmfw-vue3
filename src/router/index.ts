@@ -25,6 +25,18 @@ const routes: RouteRecordRaw[] = [
             meta: { title: '柱状图' },
           },
           {
+            path: '/examples/line',
+            name: 'EchartLine',
+            component: () => import('@/views/examples/line.vue'),
+            meta: { title: '折线图' },
+          },
+          {
+            path: '/examples/pie',
+            name: 'EchartPie',
+            component: () => import('@/views/examples/pie.vue'),
+            meta: { title: '饼图' },
+          },
+          {
             path: '/examples/editor',
             name: 'Editor',
             component: () => import('@/views/examples/editor.vue'),
